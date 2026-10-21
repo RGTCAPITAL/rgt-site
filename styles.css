@@ -1153,7 +1153,7 @@ footer {
 .hero-fullwidth-bg {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80');
+  background-image: url('assets/hero-home.webp');
   background-size: cover;
   background-position: center;
   z-index: 0;
@@ -1651,6 +1651,12 @@ footer {
 
 /* ─── RESPONSIVE (additions) ─── */
 @media (max-width: 768px) {
+  /* No retrato do celular o cover corta as laterais e o assunto da foto
+     (a direita) sai de quadro. Desloca o enquadramento para mante-lo. */
+  .hero-fullwidth-bg {
+    background-position: 72% center;
+  }
+
   .hero-fullwidth-content {
     padding: 0 24px;
     max-width: 100%;
