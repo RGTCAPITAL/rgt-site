@@ -758,6 +758,65 @@ footer {
   font-size: 1rem;
 }
 
+/* Autorização da LGPD: o formulário pede CPF e dados do processo, então o
+   aceite é explícito e não vem marcado. */
+.form-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.form-consent input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.form-consent label {
+  cursor: pointer;
+}
+
+.form-consent a {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+/* Resposta do envio. Fica vazio até existir algo a dizer, pra não ocupar
+   espaço em branco no formulário. */
+.form-status {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.form-status:empty {
+  display: none;
+}
+
+.form-status.ok {
+  color: #15803d;
+}
+
+.form-status.aviso {
+  color: #a16207;
+}
+
+/* Campo-armadilha pra robô. Sai da tela sem usar display:none nem
+   visibility:hidden, que parte dos robôs sabe detectar e pular. */
+.hp-campo {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .form-note {
   display: flex;
   align-items: center;
