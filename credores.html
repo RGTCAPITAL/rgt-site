@@ -136,6 +136,10 @@
             <input type="email" id="email" name="email" placeholder="seu@email.com" required />
           </div>
           <div class="form-group">
+            <label for="telefone">WhatsApp</label>
+            <input type="tel" id="telefone" name="telefone" placeholder="(82) 9 0000-0000" maxlength="16" required />
+          </div>
+          <div class="form-group">
             <label for="processo">Número do processo ou ofício requisitório</label>
             <input type="text" id="processo" name="processo" placeholder="0000000-00.0000.0.00.0000" required />
           </div>
@@ -143,7 +147,29 @@
             <label for="mensagem">Mensagem (opcional)</label>
             <textarea id="mensagem" name="mensagem" placeholder="Alguma informação adicional?"></textarea>
           </div>
+
+          <!--
+            Armadilha pra robô: fica fora da tela, então pessoa nenhuma
+            preenche. Se vier preenchido, o servidor descarta. Não usamos
+            display:none porque parte dos robôs ignora campo escondido assim.
+          -->
+          <div class="hp-campo" aria-hidden="true">
+            <label for="website">Não preencha este campo</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="form-consent">
+            <input type="checkbox" id="consentimento" name="consentimento" required />
+            <label for="consentimento">
+              Autorizo a RGT Capital a tratar meus dados pessoais, inclusive CPF e dados do
+              processo, para analisar meu precatório e entrar em contato comigo. Posso pedir a
+              exclusão a qualquer momento. Veja a
+              <a href="politica-privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+            </label>
+          </div>
+
           <button type="submit" class="btn-primary form-submit">Enviar para análise</button>
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
         </form>
         <p class="form-note reveal">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -307,11 +333,18 @@
       const nome = document.getElementById('nome').value.trim();
       const cpf = document.getElementById('cpf').value.trim();
       const email = document.getElementById('email').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
       const processo = document.getElementById('processo').value.trim();
       const mensagem = document.getElementById('mensagem').value.trim();
+      const consentiu = document.getElementById('consentimento').checked;
+      const status = document.getElementById('form-status');
 
-      if (!nome || !cpf || !email || !processo) {
+      if (!nome || !cpf || !email || !telefone || !processo) {
         alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+      }
+      if (!consentiu) {
+        alert('Para seguir, precisamos da sua autorização para tratar os dados.');
         return;
       }
 
@@ -319,12 +352,48 @@
       msg += `*Nome:* ${nome}\n`;
       msg += `*CPF:* ${cpf}\n`;
       msg += `*E-mail:* ${email}\n`;
+      msg += `*WhatsApp:* ${telefone}\n`;
       msg += `*Processo/Ofício:* ${processo}`;
       if (mensagem) msg += `\n*Mensagem:* ${mensagem}`;
 
       // Conversão pro pixel (só dispara se o visitante aceitou os cookies). Sem dados pessoais.
       if (window.rgtRastrear) window.rgtRastrear('Lead');
+
+      // O WhatsApp abre AGORA, dentro do clique. Se esperasse a resposta do
+      // servidor, o navegador trataria como popup e bloquearia — o credor
+      // perderia o canal que ele conhece por causa de uma chamada nossa.
       window.open('https://wa.me/5582999510638?text=' + encodeURIComponent(msg), '_blank');
+
+      // E o lead entra no CRM em paralelo. Falhar aqui não pode tirar o
+      // atendimento do ar: a conversa no WhatsApp já começou.
+      status.textContent = 'Enviando seus dados...';
+      status.className = 'form-status';
+
+      fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: nome,
+          telefone: telefone,
+          email: email,
+          cpf_cnpj: cpf,
+          numero_processo: processo,
+          mensagem: mensagem,
+          website: document.getElementById('website').value,
+        }),
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('falhou');
+          status.textContent = 'Recebemos seus dados. Continue pelo WhatsApp que acabou de abrir.';
+          status.className = 'form-status ok';
+          document.getElementById('credores-form').reset();
+        })
+        .catch(function () {
+          // Não assusta o credor: o caminho que importa pra ele já funcionou.
+          status.textContent =
+            'Abrimos o WhatsApp com seus dados. Se a janela não apareceu, chame (82) 9 9951-0638.';
+          status.className = 'form-status aviso';
+        });
     });
   </script>
   <script src="assets/consentimento.js" defer></script>
